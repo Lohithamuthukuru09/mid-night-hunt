@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Midnight Tide 🌊</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:Georgia,"Times New Roman",serif;background:#040b1a;color:#eaf6ff}
+.page{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:25px}
+.page.active{display:flex;animation:pageIn .7s ease}
+@keyframes pageIn{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:scale(1)}}
+
+/* ---------- progress tracker ---------- */
+#tracker{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:50;display:none;gap:10px;background:rgba(4,12,28,.72);border:1px solid rgba(120,200,255,.3);padding:9px 18px;border-radius:40px;backdrop-filter:blur(6px)}
+#tracker.show{display:flex}
+.slot{width:30px;height:30px;border-radius:50%;border:1.5px dashed rgba(140,210,255,.45);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;color:transparent;transition:.5s}
+.slot.got{border-style:solid;border-color:#ffd76e;color:#ffd76e;background:rgba(255,215,110,.12);box-shadow:0 0 14px rgba(255,215,110,.45)}
+
+/* ---------- shared ---------- */
+.content{position:relative;z-index:5;max-width:880px;width:100%}
+.eyebrow{letter-spacing:6px;text-transform:uppercase;font-size:11px;color:#8fd6ff;margin-bottom:16px}
+h1{font-size:clamp(38px,7vw,74px);font-weight:500;letter-spacing:2px;margin-bottom:16px}
+h2{font-size:clamp(30px,5vw,54px);font-weight:500;color:#ffe9a8;margin-bottom:16px}
+p{font-size:17px;line-height:1.75;color:#cfe6f5;max-width:680px;margin:0 auto}
+button{margin-top:26px;border:1px solid #ffd76e;background:linear-gradient(135deg,#e8b23a,#ffe9a8,#d99a1f);color:#081426;padding:14px 30px;border-radius:40px;font-family:Georgia,serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 25px rgba(255,215,110,.3);transition:.25s}
+button:hover{transform:translateY(-3px);box-shadow:0 0 40px rgba(255,215,110,.6)}
+button:disabled{opacity:.4;pointer-events:none}
+.hint{margin-top:14px;font-size:13px;color:#7fb8d9;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.35}}
+.pop{position:fixed;font-size:56px;font-weight:bold;color:#ffe9a8;text-shadow:0 0 30px #ffd76e;z-index:60;animation:letterPop 1.4s ease forwards;pointer-events:none}
+@keyframes letterPop{0%{transform:scale(.3);opacity:0}30%{opacity:1;transform:scale(1.3)}100%{transform:scale(1) translateY(-90px);opacity:0}}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+/* ---------- night decorations ---------- */
+.moon{position:absolute;top:7%;right:10%;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff,#dfe9f5 60%,#b9c8dd);box-shadow:0 0 60px 18px rgba(220,235,255,.35);z-index:1}
+.sea{position:absolute;bottom:0;left:0;width:100%;height:150px;z-index:1;overflow:hidden}
+.sea i{position:absolute;bottom:-10px;left:-60%;width:220%;height:120%;border-radius:42%;background:rgba(40,110,180,.35);animation:seaMove 9s linear infinite}
+.sea i:nth-child(2){opacity:.5;animation-duration:6.5s;animation-direction:reverse;background:rgba(60,140,200,.3)}
+@keyframes seaMove{to{transform:rotate(360deg)}}
+.stars{position:absolute;inset:0;pointer-events:none;z-index:0}
+.stars i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:tw 3s infinite}
+@keyframes tw{50%{opacity:.25;transform:scale(1.6)}}
+
+/* ---------- page themes ---------- */
+#page1{background:linear-gradient(180deg,#050d22 0%,#0a1f3d 55%,#0d2c52 100%)}
+#page2{background:linear-gradient(180deg,#04101f 0%,#0a2438 60%,#0d3348 100%)}
+#page3{background:radial-gradient(circle at 50% 65%,#0a2e4a 0,#061628 55%,#030a16 100%)}
+#page4{background:linear-gradient(180deg,#060f22 0%,#12233f 60%,#1a2c47 100%)}
+#page5{background:linear-gradient(180deg,#03101c 0%,#0a2a3a 60%,#0e3a4a 100%)}
+#page6{background:linear-gradient(180deg,#04091c 0%,#0b1533 65%,#101d42 100%)}
+#page7{background:linear-gradient(180-gradient,0)}
+#page7{background:radial-gradient(circle at 50% 75%,#123a4d 0,#072033 55%,#030c17 100%)}
+#page8{background:linear-gradient(180deg,#081226 0%,#251636 65%,#33193f 100%)}
+#page9{background:radial-gradient(circle at 50% 80%,#0b3350 0,#061a2e 55%,#02090f 100%)}
+#page10{background:linear-gradient(180deg,#1b1035 0%,#5b2a4a 35%,#c9502e 65%,#f2a03d 85%,#ffd76e 100%)}
+
+/* ---------- P2 shells ---------- */
+.shellrow{display:flex;gap:26px;justify-content:center;margin:40px 0 8px;flex-wrap:wrap}
+.pick{width:86px;height:78px;border:none;background:transparent;cursor:pointer;font-size:64px;padding:0;box-shadow:none;transition:transform .2s;filter:drop-shadow(0 0 12px rgba(140,220,255,.25))}
+.pick:hover{transform:scale(1.15) translateY(-4px);box-shadow:none}
+.pick.gold{filter:drop-shadow(0 0 22px #ffd76e)}
+
+/* ---------- P3 plankton ---------- */
+.lagoon{position:relative;width:min(560px,90vw);height:230px;margin:26px auto}
+.orb{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,#bff3ff,#4fc3f7 60%,transparent);box-shadow:0 0 24px 8px rgba(110,220,255,.5);cursor:pointer;animation:drift 4s ease-in-out infinite;border:none;padding:0}
+.orb.gold{background:radial-gradient(circle,#fff3c2,#ffd76e 60%,transparent);box-shadow:0 0 30px 12px rgba(255,215,110,.65)}
+@keyframes drift{50%{transform:translate(10px,-18px)}}
+
+/* ---------- P4 compass ---------- */
+.compass{width:150px;height:150px;border-radius:50%;border:4px solid #c9a64e;margin:26px auto;position:relative;background:radial-gradient(circle,#17263f,#0a1322 70%);box-shadow:0 0 35px rgba(255,215,110,.25);cursor:pointer}
+.needle{position:absolute;left:50%;top:50%;width:8px;height:118px;margin:-59px 0 0 -4px;transform-origin:center;transition:transform 1.8s cubic-bezier(.2,.7,.3,1)}
+.needle:before{content:"";position:absolute;left:0;top:0;width:0;height:0;border:4px solid transparent;border-bottom:56px solid #ff6b6b}
+.needle:after{content:"";position:absolute;left:0;bottom:0;width:0;height:0;border:4px solid transparent;border-top:56px solid #dfe9f5}
+.sandmark{font-size:52px;font-weight:bold;color:#ffe9a8;text-shadow:0 0 25px #ffd76e;opacity:0;transition:opacity 1s;margin-top:8px}
+.sandmark.show{opacity:1}
+
+/* ---------- P5 oysters ---------- */
+.oysterrow{display:flex;gap:22px;justify-content:center;margin:36px 0 6px;flex-wrap:wrap}
+.oyster{position:relative;width:92px;height:86px;cursor:pointer;background:transparent;border:none;padding:0;box-shadow:none}
+.oyster .bottom{position:absolute;bottom:0;left:6px;width:80px;height:40px;background:linear-gradient(#8a97a8,#5c6b7d);border-radius:0 0 46px 46px}
+.oyster .top{position:absolute;top:6px;left:6px;width:80px;height:40px;background:linear-gradient(#b7c4d4,#8a97a8);border-radius:46px 46px 0 0;transition:transform .7s;transform-origin:bottom center}
+.oyster .inside{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:34px;opacity:0;transition:opacity .5s .3s}
+.oyster.open .top{transform:rotate(-160deg)}
+.oyster.open .inside{opacity:1}
+.oyster:hover{box-shadow:none;transform:none}
+
+/* ---------- P6 lighthouse ---------- */
+.lighthouse{width:110px;height:220px;margin:16px auto 0;position:relative;background:linear-gradient(#e8eef5,#c3cede);clip-path:polygon(28% 0,72% 0,100% 100%,0 100%)}
+.lamp{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:44px;height:30px;border-radius:8px;background:#33465e;border:2px solid #ffd76e;cursor:pointer;z-index:3}
+.lamp i{position:absolute;inset:5px;border-radius:50%;background:#22354d;transition:.4s}
+.lamp.lit1 i{background:radial-gradient(circle,#ffe9a8,#e8b23a)}
+.lamp.lit2 i{background:radial-gradient(circle,#fff3c2,#ffd76e)}
+.lamp.lit3 i{background:#fff;box-shadow:0 0 40px 16px rgba(255,230,140,.9)}
+.beam{position:absolute;top:-16px;left:50%;width:340px;height:60px;background:linear-gradient(90deg,rgba(255,235,160,.7),transparent);transform-origin:left center;opacity:0;transition:opacity 1s;pointer-events:none;z-index:2}
+.beam.on{opacity:1;animation:sweep 3.4s ease-in-out 1}
+@keyframes sweep{0%{transform:rotate(8deg)}50%{transform:rotate(-46deg)}100%{transform:rotate(-24deg)}}
+.rockT{font-size:52px;font-weight:bold;color:#ffe9a8;text-shadow:0 0 25px #ffd76e;opacity:0;transition:opacity 1.2s;margin-top:18px}
+.rockT.show{opacity:1}
+
+/* ---------- P7 clam ---------- */
+.clam{position:relative;width:170px;height:130px;margin:30px auto 6px;cursor:pointer}
+.clam .cbottom{position:absolute;bottom:0;left:10px;width:150px;height:62px;background:linear-gradient(#c99ab8,#8f5f86);border-radius:0 0 80px 80px}
+.clam .ctop{position:absolute;top:8px;left:10px;width:150px;height:62px;background:linear-gradient(#e3bcd4,#b983ab);border-radius:80px 80px 0 0;transform-origin:bottom center;transition:transform .8s}
+.clam .chide{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:44px;font-weight:bold;color:#ffe9a8;text-shadow:0 0 22px #ffd76e;opacity:0;transition:opacity .6s .4s}
+.clam.open .ctop{transform:rotate(-150deg)}
+.clam.open .chide{opacity:1}
+
+/* ---------- P8 bonfire ---------- */
+.firepit{position:relative;width:200px;height:150px;margin:24px auto 4px}
+.wood{position:absolute;bottom:8px;width:120px;height:16px;background:linear-gradient(#7a5230,#4a2e18);border-radius:8px;cursor:pointer;transition:.4s;opacity:.35;left:50%;margin-left:-60px}
+.wood.w1{transform:rotate(12deg)}.wood.w2{transform:rotate(-14deg)}.wood.w3{transform:rotate(2deg)}
+.wood.added{opacity:1}
+.flame{position:absolute;bottom:22px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:radial-gradient(#fff3c2,#ff922b);opacity:0;transform-origin:bottom center}
+.firepit.lit .flame{opacity:1;animation:fl .5s ease-in-out infinite alternate}
+.firepit.lit .f1{width:34px;height:52px;margin-left:-17px}
+.firepit.lit .f2{width:22px;height:38px;margin-left:-11px;animation-delay:.15s}
+.firepit.lit .f3{width:14px;height:26px;margin-left:-7px;animation-delay:.3s}
+@keyframes fl{from{transform:scaleY(1)}to{transform:scaleY(1.25) scale(1.08)}}
+.fireA{font-size:52px;font-weight:bold;color:#ffe9a8;text-shadow:0 0 28px #ffb14e;opacity:0;transition:opacity 1s;margin-top:10px}
+.fireA.show{opacity:1}
+
+/* ---------- P9 tide assembly ---------- */
+.chips{display:flex;gap:12px;justify-content:center;margin:30px 0 10px;flex-wrap:wrap}
+.chip{width:52px;height:52px;border-radius:50%;border:2px solid #8fd6ff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:bold;color:#8fd6ff;background:rgba(10,35,60,.6);animation:bob 3s ease-in-out infinite}
+.chip.got{border-color:#ffd76e;color:#ffe9a8;box-shadow:0 0 18px rgba(255,215,110,.5)}
+@keyframes bob{50%{transform:translateY(-9px)}}
+#nameAssembled{font-size:clamp(38px,8vw,72px);font-weight:bold;letter-spacing:8px;color:#ffe9a8;text-shadow:0 0 35px rgba(255,215,110,.55);opacity:0;transform:scale(.6);transition:all 1s;margin:22px 0}
+#nameAssembled.show{opacity:1;transform:scale(1)}
+
+/* ---------- P10 finale ---------- */
+.finalName{font-size:clamp(42px,9vw,96px);color:#fff7e0;text-shadow:0 0 35px rgba(255,180,80,.65);margin:10px 0 14px;letter-spacing:3px}
+.sun{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#fff3c2,#ffb14e);box-shadow:0 0 90px 40px rgba(255,170,80,.45);animation:sunUp 6s ease forwards;z-index:1}
+@keyframes sunUp{from{transform:translate(-50%,120px)}to{transform:translate(-50%,0)}}
+.wishline{font-size:19px;color:#fff3d9;max-width:640px}
+.confetti{position:absolute;top:-10px;z-index:40;animation:cfall linear forwards}
+@keyframes cfall{to{transform:translateY(110vh) rotate(720deg)}}
+.fromline{margin-top:22px;font-size:14px;letter-spacing:3px;color:#ffe9a8}
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div id="tracker"></div>
+
+<!-- 1 -->
+<section class="page active" id="page1">
+<div class="stars"><i style="left:12%;top:20%"></i><i style="left:30%;top:12%"></i><i style="left:55%;top:18%"></i><i style="left:75%;top:10%"></i><i style="left:88%;top:25%"></i><i style="left:20%;top:40%"></i><i style="left:64%;top:38%"></i></div>
+<div class="moon"></div><div class="sea"><i></i><i></i></div>
+<div class="content">
+<div class="eyebrow">Somewhere on a midnight shore</div>
+<h1>The Midnight Tide</h1>
+<p>The sea has been keeping a secret all night.<br>It washed a bottle ashore — and it has your name on it.</p>
+<button onclick="startHunt()">Open the Bottle</button>
+</div></section>
+
+<!-- 2 -->
+<section class="page" id="page2">
+<div class="sea"><i></i><i></i></div>
+<div class="content">
+<div class="eyebrow">Inside the bottle</div><h2>Seven shells. Seven letters.</h2>
+<p>"Seven glowing shells hide seven letters of a name the ocean loves.<br>Find them all — and the tide will speak it aloud."</p>
+<div class="shellrow">
+<button class="pick" onclick="wrongPick(this)">🐚</button>
+<button class="pick gold" onclick="findLetter(0,this)">🐚</button>
+<button class="pick" onclick="wrongPick(this)">🐚</button>
+</div>
+<p class="hint">One of these shells is glowing warmer...</p>
+</div></section>
+
+<!-- 3 -->
+<section class="page" id="page3">
+<div class="content">
+<div class="eyebrow">The plankton lagoon</div><h2>Catch the golden light</h2>
+<p>Tiny lights drift in the dark water.<br>One of them burns gold — it carries the second letter.</p>
+<div class="lagoon">
+<button class="orb" style="left:8%;top:20%" onclick="wrongPick(this)"></button>
+<button class="orb gold" style="left:38%;top:55%" onclick="findLetter(1,this)"></button>
+<button class="orb" style="left:66%;top:15%;animation-delay:-1.5s" onclick="wrongPick(this)"></button>
+<button class="orb" style="left:82%;top:60%;animation-delay:-2.5s" onclick="wrongPick(this)"></button>
+</div>
+<p class="hint">Tap the light that shines gold</p>
+</div></section>
+
+<!-- 4 -->
+<section class="page" id="page4">
+<div class="moon"></div>
+<div class="content">
+<div class="eyebrow">The sailor's old compass</div><h2>Let the needle decide</h2>
+<p>An old compass still remembers the way.<br>Tap it — wherever the needle stops, the sand has been marked.</p>
+<div class="compass" id="compass" onclick="spinCompass()"><div class="needle" id="needle"></div></div>
+<div class="sandmark" id="sandmark">M</div>
+<p class="hint" id="cHint">Tap the compass</p>
+</div></section>
+
+<!-- 5 -->
+<section class="page" id="page5">
+<div class="sea"><i></i><i></i></div>
+<div class="content">
+<div class="eyebrow">The oyster bed</div><h2>Open the oysters</h2>
+<p>Oysters keep pearls… but one of these keeps something better.</p>
+<div class="oysterrow">
+<button class="oyster" onclick="openOyster(this,false)"><div class="top"></div><div class="bottom"></div><div class="inside">🦪</div></button>
+<button class="oyster" onclick="openOyster(this,true)"><div class="top"></div><div class="bottom"></div><div class="inside">A</div></button>
+<button class="oyster" onclick="openOyster(this,false)"><div class="top"></div><div class="bottom"></div><div class="inside">●</div></button>
+</div>
+<p class="hint">Tap each oyster to open it</p>
+</div></section>
+
+<!-- 6 -->
+<section class="page" id="page6">
+<div class="content">
+<div class="eyebrow">The silent lighthouse</div><h2>Light the lamp</h2>
+<p>The lighthouse has been dark all night.<br>Tap its lamp <b>three times</b> — its beam will find what the dark is hiding.</p>
+<div style="position:relative;width:360px;margin:0 auto">
+<div class="lighthouse"><div class="lamp" id="lamp" onclick="tapLamp(event)"><i></i></div></div>
+<div class="beam" id="beam" style="left:calc(50% - 2px)"></div>
+</div>
+<div class="rockT" id="rockT">T</div>
+<p class="hint" id="lHint">Tap the lamp 3 times</p>
+</div></section>
+
+<!-- 7 -->
+<section class="page" id="page7">
+<div class="sea"><i></i><i></i></div>
+<div class="content">
+<div class="eyebrow">The sleeping clam</div><h2>Wake the clam</h2>
+<p>Something glows inside this giant clam.<br>Tap it gently — it's holding the sixth letter.</p>
+<div class="clam" id="clam" onclick="openClam()">
+<div class="ctop"></div><div class="cbottom"></div><div class="chide">H</div>
+</div>
+<p class="hint">Tap the clam</p>
+</div></section>
+
+<!-- 8 -->
+<section class="page" id="page8">
+<div class="stars"><i style="left:15%;top:15%"></i><i style="left:45%;top:10%"></i><i style="left:70%;top:20%"></i><i style="left:88%;top:12%"></i></div>
+<div class="content">
+<div class="eyebrow">The cove bonfire</div><h2>Build the fire</h2>
+<p>The last letter hides in the flames.<br>Add all three pieces of driftwood to wake the fire.</p>
+<div class="firepit" id="firepit">
+<div class="wood w1" onclick="addWood(this)"></div>
+<div class="wood w2" onclick="addWood(this)"></div>
+<div class="wood w3" onclick="addWood(this)"></div>
+<div class="flame f3"></div><div class="flame f2"></div><div class="flame f1"></div>
+</div>
+<div class="fireA" id="fireA">A</div>
+</div></section>
+
+<!-- 9 -->
+<section class="page" id="page9">
+<div class="sea"><i></i><i></i></div>
+<div class="content">
+<div class="eyebrow">The tide pool</div><h2>All seven letters found</h2>
+<p>The shells are quiet now.<br>Let the tide speak the name it has been guarding all night.</p>
+<div class="chips" id="chips"></div>
+<div id="nameAssembled">M A M A T H A</div>
+<p id="tideMsg" style="opacity:0;transition:opacity 1.2s;color:#ffe9a8">The ocean doesn't whisper this name to just anyone.<br>Happy birthday, Mamatha — this whole midnight world was built for you.</p>
+<button id="speakBtn" onclick="speakName()">Let the Tide Speak</button>
+<button id="dawnBtn" style="display:none" onclick="showPage(10)">Watch the Sunrise</button>
+</div></section>
+
+<!-- 10 -->
+<section class="page" id="page10">
+<div class="sun"></div><div class="sea"><i></i><i></i></div>
+<div class="content">
+<div class="eyebrow" style="color:#fff3d9">The secret the sea was keeping</div>
+<div class="finalName">Happy Birthday,<br>Mamatha 🌅</div>
+<p class="wishline">May your year be as bright as this sunrise —<br>warm tides, calm waters, and adventures worth remembering.</p>
+<p class="fromline">— with love, your friend 💙</p>
+</div></section>
+
+<script>
+/* 👇 EDIT THIS LINE if you want to sign your own name */
+const SENDER = "your friend";
+
+const NAME = "MAMATHA";
+const letters = NAME.split("");
+const found = new Array(letters.length).fill(false);
+let current = 0;
+
+/* build tracker */
+const tracker = document.getElementById("tracker");
+letters.forEach((l,i)=>{
+  const s = document.createElement("div");
+  s.className = "slot"; s.id = "slot"+i; s.textContent = l;
+  tracker.appendChild(s);
+});
+/* build chips */
+const chips = document.getElementById("chips");
+letters.forEach((l,i)=>{
+  const c = document.createElement("div");
+  c.className = "chip"; c.id = "chip"+i; c.textContent = "?";
+  c.style.animationDelay = (i*0.25)+"s";
+  chips.appendChild(c);
+});
+
+function showPage(n){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page"+n).classList.add("active");
+  if(n>=2 && n<=9) tracker.classList.add("show");
+  if(n===9) revealChips();
+}
+function startHunt(){
+  showPage(2);
+  tracker.classList.add("show");
+}
+function popLetter(l, x, y){
+  const el = document.createElement("div");
+  el.className = "pop"; el.textContent = l;
+  el.style.left = x+"px"; el.style.top = y+"px";
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1500);
+}
+function findLetter(i, el){
+  if(found[i]) return;
+  found[i] = true;
+  const r = el.getBoundingClientRect();
+  popLetter(letters[i], r.left + r.width/2 - 20, r.top - 10);
+  document.getElementById("slot"+i).classList.add("got");
+  el.style.pointerEvents = "none";
+  setTimeout(()=>showPage(current+3), 1300);
+}
+function wrongPick(el){
+  el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
+}
+/* page order: 2->3(M),3->4(A),4 handled,5->(A),6->(T),7->(H),8->(A) */
+const pageOf = [2,3,4,5,6,7,8];
+function nextAfter(i){ showPage(pageOf[i]+1); }
+
+/* wire findLetter pages to correct flow */
+const origFind = findLetter;
+findLetter = function(i, el){
+  if(found[i]) return;
+  found[i] = true;
+  const r = el.getBoundingClientRect();
+  popLetter(letters[i], r.left + r.width/2 - 20, r.top - 10);
+  document.getElementById("slot"+i).classList.add("got");
+  el.style.pointerEvents = "none";
+  setTimeout(()=>nextAfter(i), 1300);
+};
+
+/* compass */
+let spun = false;
+function spinCompass(){
+  if(spun) return; spun = true;
+  const n = document.getElementById("needle");
+  n.style.transform = "rotate(" + (720 + Math.random()*80 - 40) + "deg)";
+  setTimeout(()=>{
+    document.getElementById("sandmark").classList.add("show");
+    document.getElementById("cHint").textContent = "The sand was marked all along...";
+    setTimeout(()=>{ if(!found[2]) findLetter(2, document.getElementById("sandmark")); }, 700);
+  }, 1800);
+}
+/* oysters */
+let oysterDone = false;
+function openOyster(el, hasLetter){
+  el.classList.add("open");
+  el.style.pointerEvents = "none";
+  if(hasLetter && !oysterDone){
+    oysterDone = true;
+    setTimeout(()=>findLetter(3, el), 900);
+  }
+}
+/* lighthouse */
+let lampTaps = 0;
+function tapLamp(e){
+  e.stopPropagation();
+  lampTaps++;
+  const l = document.getElementById("lamp");
+  if(lampTaps===1) l.classList.add("lit1");
+  if(lampTaps===2) l.classList.add("lit2");
+  if(lampTaps>=3){
+    l.classList.add("lit3");
+    document.getElementById("lHint").textContent = "The beam is searching...";
+    setTimeout(()=>{
+      document.getElementById("beam").classList.add("on");
+      setTimeout(()=>{
+        document.getElementById("rockT").classList.add("show");
+        setTimeout(()=>{ if(!found[4]) findLetter(4, document.getElementById("rockT")); }, 500);
+      }, 1600);
+    }, 400);
+  }
+}
+/* clam */
+function openClam(){
+  const c = document.getElementById("clam");
+  if(c.classList.contains("open")) return;
+  c.classList.add("open");
+  setTimeout(()=>{ if(!found[5]) findLetter(5, c); }, 900);
+}
+/* bonfire */
+let wood = 0;
+function addWood(el){
+  if(el.classList.contains("added")) return;
+  el.classList.add("added"); wood++;
+  if(wood>=3){
+    document.getElementById("firepit").classList.add("lit");
+    setTimeout(()=>{
+      document.getElementById("fireA").classList.add("show");
+      setTimeout(()=>{ if(!found[6]) findLetter(6, document.getElementById("fireA")); }, 500);
+    }, 700);
+  }
+}
+/* tide speaking */
+function revealChips(){
+  letters.forEach((l,i)=>{
+    setTimeout(()=>{
+      const c = document.getElementById("chip"+i);
+      c.textContent = l; c.classList.add("got");
+    }, 400 + i*350);
+  });
+}
+let spoken = false;
+function speakName(){
+  if(spoken) return; spoken = true;
+  document.getElementById("speakBtn").style.display = "none";
+  document.getElementById("nameAssembled").classList.add("show");
+  document.getElementById("tideMsg").style.opacity = 1;
+  setTimeout(()=>{ document.getElementById("dawnBtn").style.display = "inline-block"; }, 1800);
+}
+/* finale confetti */
+let confettiDone = false;
+const origShow = showPage;
+showPage = function(n){
+  origShow(n);
+  if(n===10 && !confettiDone){
+    confettiDone = true;
+    const colors = ["#ffd76e","#ff9f68","#fff3c2","#8fd6ff","#ffb14e"];
+    for(let i=0;i<70;i++){
+      const c = document.createElement("i");
+      c.className = "confetti";
+      c.style.left = Math.random()*100+"%";
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      const s = 6+Math.random()*8;
+      c.style.width = s+"px"; c.style.height = s+"px";
+      if(Math.random()>.5) c.style.borderRadius = "50%";
+      c.style.animationDuration = (2.5+Math.random()*2.5)+"s";
+      document.getElementById("page10").appendChild(c);
+      setTimeout(()=>c.remove(), 5500);
+    }
+  }
+};
+document.querySelector(".fromline").textContent = "— with love, " + SENDER + " 💙";
+</script>
+</body>
+</html>
